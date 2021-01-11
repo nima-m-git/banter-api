@@ -4,6 +4,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const cors = require("cors");
+const passport = require("passport");
 
 const bodyParser = require("body-parser");
 
@@ -37,10 +38,12 @@ app.use(cors());
 
 app.use("/", indexRouter);
 // Middleware requiring login for any further routes
-app.use((req, res, next) => {
-  if (req.user) return next();
-  else res.status(307).send({ msg: "login required" });
-});
+app.use(passport.authenticate("jwt", { session: false, failWithError: true }));
+
+// app.use((req, res, next) => {
+//   if (req.user) return next();
+//   else res.status(307).send({ msg: "login required" });
+// });
 app.use("/users", usersRouter);
 
 // catch 404 and forward to error handler
@@ -56,7 +59,7 @@ app.use(function (err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render("error");
+  return res.json({ err: err.toString() });
 });
 
 module.exports = app;
