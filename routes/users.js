@@ -9,8 +9,8 @@ router.get("/", userController.user_index);
 // // GET user profile
 // router.get("/:id", userController.user_profile);
 
-// // POST send friend request
-// router.post("/:id", userController.send_request);
+// POST send friend request
+router.post("/:id", userController.send_request);
 
 // // GET friends
 // router.get("/friends", userController.get_friends);

@@ -105,8 +105,55 @@ exports.user_index = (req, res, next) => {
 // User summary
 exports.user_index = (req, res, next) => {
   User.findById(req.params.id)
-    .populate("comment post")
+    .populate("posts")
     .exec()
     .then((user) => res.send(user))
     .catch((err) => next(err));
+};
+
+// Send friend request
+exports.send_request = async (req, res, next) => {
+  // check current friend status
+  try {
+    const requestUser = await User.findById(req.params.id).exec();
+    const currentUser = await User.findById(req.user.id).exec();
+
+    const connectedFriend = requestUser.friends.find(
+      (friendData) => friendData?.friend == req.user.id
+    );
+
+    if (!connectedFriend) {
+      //   users not connected, allow request
+      try {
+        await requestUser.friends.push({
+          friend: {
+            _id: req.user.id,
+            msg: "meow",
+          },
+          status: "received",
+        });
+        await requestUser.save();
+
+        await currentUser.friends.push({
+          friend: {
+            _id: req.params.id,
+            msg: "holy",
+          },
+          status: "pending",
+        });
+        await currentUser.save();
+
+        res.send({ msg: `request to ${requestUser.fullName} sent` });
+      } catch (err) {
+        return next(err);
+      }
+    } else {
+      res.send({
+        msg: `request to ${requestUser.fullName} could not be made`,
+        friendsStatus: connectedFriend.status,
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
 };

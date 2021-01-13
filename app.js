@@ -28,22 +28,44 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
+// Application level middlwware
 app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-
 app.use(cors());
 
+// Initialize passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Define routes
 app.use("/", indexRouter);
+
+// // Facebook auth routes
+// app.get(
+//   "/auth/facebook",
+//   passport.authenticate("facebook", { scope: ["email"] })
+// );
+// app.get(
+//   "/auth/facebook/callback",
+//   passport.authenticate("facebook", {
+//     scope: ["email"],
+//     // successRedirect: "/",
+//     failureRedirect: "/login",
+//   }),
+//   (req, res) => {
+//     res.cookie("auth", req.user.jwtoken);
+//     console.log(req.user.jwtoken + " token after cookie");
+//     res.send(req.cookies);
+//     // res.redirect('/');
+//   }
+// );
+
 // Middleware requiring login for any further routes
 app.use(passport.authenticate("jwt", { session: false, failWithError: true }));
 
-// app.use((req, res, next) => {
-//   if (req.user) return next();
-//   else res.status(307).send({ msg: "login required" });
-// });
 app.use("/users", usersRouter);
 
 // catch 404 and forward to error handler

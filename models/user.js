@@ -11,7 +11,6 @@ const UserSchema = new Schema({
   password: {
     type: String,
     minlength: 5,
-    required: true,
   },
   firstName: {
     type: String,
@@ -24,14 +23,20 @@ const UserSchema = new Schema({
     required: true,
   },
   friends: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      status: {
-        type: String,
-        enum: ["pending", "received", "blocked", "friends"],
+    new Schema(
+      {
+        friend: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          msg: String,
+        },
+        status: {
+          type: String,
+          enum: ["pending", "received", "blocked", "friends"],
+        },
       },
-    },
+      { _id: false }
+    ),
   ],
   posts: [
     {
@@ -51,7 +56,9 @@ const UserSchema = new Schema({
 UserSchema.virtual("url").get(() => "/user/" + this._id);
 
 // Virtual for user full name formatted
-UserSchema.virtual("fullName").get(`${this.firstName} ${this.lastName}`);
+UserSchema.virtual("fullName").get(function () {
+  return `${this.firstName} ${this.lastName}`;
+});
 
 // Virtual for image's URL
 UserSchema.virtual("imageurl").get(function () {
