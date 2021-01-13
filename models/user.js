@@ -23,20 +23,19 @@ const UserSchema = new Schema({
     required: true,
   },
   friends: [
-    new Schema(
-      {
-        friend: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          msg: String,
-        },
-        status: {
-          type: String,
-          enum: ["pending", "received", "blocked", "friends"],
-        },
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  requests: [
+    {
+      _id: Schema.Types.ObjectId,
+      status: {
+        type: String,
+        enum: ["pending", "received", "accepted"],
       },
-      { _id: false }
-    ),
+    },
   ],
   posts: [
     {

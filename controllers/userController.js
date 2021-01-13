@@ -118,27 +118,21 @@ exports.send_request = async (req, res, next) => {
     const requestUser = await User.findById(req.params.id).exec();
     const currentUser = await User.findById(req.user.id).exec();
 
-    const connectedFriend = requestUser.friends.find(
-      (friendData) => friendData?.friend == req.user.id
+    const connectedFriend = requestUser.requests.find(
+      (person) => person?._id == req.user.id
     );
 
     if (!connectedFriend) {
       //   users not connected, allow request
       try {
-        await requestUser.friends.push({
-          friend: {
-            _id: req.user.id,
-            msg: "meow",
-          },
+        await requestUser.requests.push({
+          _id: req.user.id,
           status: "received",
         });
         await requestUser.save();
 
-        await currentUser.friends.push({
-          friend: {
-            _id: req.params.id,
-            msg: "holy",
-          },
+        await currentUser.requests.push({
+          _id: req.params.id,
           status: "pending",
         });
         await currentUser.save();
@@ -148,6 +142,7 @@ exports.send_request = async (req, res, next) => {
         return next(err);
       }
     } else {
+      // users already connected
       res.send({
         msg: `request to ${requestUser.fullName} could not be made`,
         friendsStatus: connectedFriend.status,
