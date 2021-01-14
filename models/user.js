@@ -33,7 +33,7 @@ const UserSchema = new Schema({
       _id: Schema.Types.ObjectId,
       status: {
         type: String,
-        enum: ["pending", "received", "accepted"],
+        enum: ["pending", "received", "accepted", "denied"],
       },
     },
   ],

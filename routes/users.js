@@ -9,13 +9,16 @@ router.get("/", userController.user_index);
 // // GET user profile
 // router.get("/:id", userController.user_profile);
 
-// POST send friend request
-router.post("/:id", userController.send_request);
-
 // // GET friends
 // router.get("/friends", userController.get_friends);
 
-// // POST respond friend request
-// router.post("/friends", userController.respond_request);
+// GET show all pending/received requests
+// router.get("/requests", userController.requests_index);
+
+// POST send friend request
+router.post("/requests/:id", userController.send_request);
+
+// PUT respond friend request
+router.put("/requests/:id", userController.respond_request);
 
 module.exports = router;

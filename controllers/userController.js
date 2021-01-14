@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 
 const User = require("../models/user");
+const { request } = require("express");
 
 // User sign up
 exports.signup = [
@@ -122,16 +123,30 @@ exports.send_request = async (req, res, next) => {
       (person) => person?._id == req.user.id
     );
 
+    console.log(connectedFriend);
+
+    if (connectedFriend?.status == "denied") {
+      // remove denied status upon request - while testing
+      requestUser.requests = requestUser.requests.filter(
+        (request) => request._id != req.user.id
+      );
+      currentUser.requests = currentUser.requests.filter(
+        (request) => request._id != req.params.id
+      );
+      await requestUser.save();
+      await currentUser.save();
+    }
+
     if (!connectedFriend) {
       //   users not connected, allow request
       try {
-        await requestUser.requests.push({
+        requestUser.requests.push({
           _id: req.user.id,
           status: "received",
         });
         await requestUser.save();
 
-        await currentUser.requests.push({
+        currentUser.requests.push({
           _id: req.params.id,
           status: "pending",
         });
@@ -150,5 +165,52 @@ exports.send_request = async (req, res, next) => {
     }
   } catch (err) {
     next(err);
+  }
+};
+
+exports.respond_request = async (req, res, next) => {
+  const { requestResponse } = { ...req.body };
+  const requestUserId = req.params.id;
+  const currentUserId = req.user.id;
+
+  console.log(currentUserId);
+
+  try {
+    const requestUser = await User.findById(requestUserId).exec();
+    const currentUser = await User.findById(currentUserId).exec();
+
+    const currentRequestStatus = currentUser.requests.find(
+      (request) => request._id == requestUserId
+    )?.status;
+    if (currentRequestStatus !== "received") {
+      // no connection request from requested user
+      return next(new Error("no connection request from user"));
+    }
+
+    if (!(requestResponse == "accepted" || requestResponse == "denied")) {
+      return next(new Error('response must be "accepted" or "denied'));
+    }
+
+    if (requestResponse === "accepted") {
+      // accepted request, add to eachothers friends list
+      requestUser.friends.push(currentUserId);
+      currentUser.friends.push(requestUserId);
+    }
+
+    // update request statuses
+    requestUser.requests.find(
+      (request) => request._id == currentUserId
+    ).status = requestResponse;
+
+    currentUser.requests.find(
+      (request) => request._id == requestUserId
+    ).status = requestResponse;
+
+    await requestUser.save();
+    await currentUser.save();
+
+    res.send({ msg: `request ${requestResponse}` });
+  } catch (err) {
+    return next(err);
   }
 };
