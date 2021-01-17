@@ -28,17 +28,8 @@ exports.signup = [
     }
     return true;
   }),
-  body("firstName", "Valid name required")
-    .isLength({ min: 2 })
-    .isAlpha()
-    .trim()
-    .escape(),
-  body("lastName", "Valid name required")
-    .isLength({ min: 2 })
-    .isAlpha()
-    .trim()
-    .escape(),
-
+  body("firstName", "Valid first name required").isAlpha().trim(),
+  body("lastName").isAlpha().trim().withMessage("Valid last name required"),
   (req, res, next) => {
     const errors = validationResult(req);
 
@@ -74,7 +65,7 @@ exports.login = (req, res, next) => {
       return next(err);
     }
     if (!user) {
-      return res.status(400).send({ ...message });
+      return res.send({ ...message });
     }
 
     req.login(user, { session: false }, (err) => {
@@ -95,21 +86,39 @@ exports.logout = (req, res) => {
 };
 
 // User index
-exports.user_index = (req, res, next) => {
-  User.find()
-    .populate("friends")
-    .exec()
-    .then((users) => res.send(users))
-    .catch((err) => next(err));
+exports.user_index = async (req, res, next) => {
+  try {
+    const users = await User.find().populate("friends").exec();
+
+    // add friend status in res relative to current user
+    users.forEach((user) => {
+      user.friendsStatus = user.requests.find(
+        (person) => person?._id == req.user.id
+      )?.status;
+    });
+
+    res.send({ users });
+  } catch (err) {
+    return next(err);
+  }
 };
 
-// User summary
-exports.user_index = (req, res, next) => {
-  User.findById(req.params.id)
-    .populate("posts")
-    .exec()
-    .then((user) => res.send(user))
-    .catch((err) => next(err));
+// User profile
+exports.user_profile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .populate("posts friends")
+      .exec();
+
+    // add friend status in res relative to current user
+    user.friendsStatus = user.requests.find(
+      (person) => person?._id == req.user.id
+    )?.status;
+
+    res.send({ user });
+  } catch (err) {
+    return next(err);
+  }
 };
 
 // Send friend request
@@ -122,8 +131,6 @@ exports.send_request = async (req, res, next) => {
     const connectedFriend = requestUser.requests.find(
       (person) => person?._id == req.user.id
     );
-
-    console.log(connectedFriend);
 
     if (connectedFriend?.status == "denied") {
       // remove denied status upon request - while testing
@@ -168,12 +175,11 @@ exports.send_request = async (req, res, next) => {
   }
 };
 
+// Respond to request
 exports.respond_request = async (req, res, next) => {
   const { requestResponse } = { ...req.body };
   const requestUserId = req.params.id;
   const currentUserId = req.user.id;
-
-  console.log(currentUserId);
 
   try {
     const requestUser = await User.findById(requestUserId).exec();

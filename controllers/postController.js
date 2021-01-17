@@ -4,6 +4,18 @@ const Comment = require("../models/comment");
 
 const { body, validationResult } = require("express-validator");
 
+// Check user liked post
+// exports.post_liked = (req, res, next) => {
+//   Post.findById(req.params.id)
+//   .then(post => {
+//     const liked = !!post.likes.find(like => like._id == req.user.id)
+//     res.send({ liked, })
+//   })
+
+//     return (!!post.likes.find(like => like._id == req.user.id))
+//   }
+// }
+
 // Get all posts
 exports.index = (req, res, next) => {
   Post.find()
@@ -17,7 +29,13 @@ exports.index = (req, res, next) => {
       },
     })
     .exec()
-    .then((posts) => res.send({ posts }))
+    .then((posts) => {
+      posts.forEach(
+        (post) =>
+          (post.liked = !!post.likes.find((like) => like._id == req.user.id))
+      );
+      res.send({ posts });
+    })
     .catch((err) => next(err));
 };
 
@@ -33,7 +51,10 @@ exports.get_post = (req, res, next) => {
       },
     })
     .exec()
-    .then((post) => res.send({ post }))
+    .then((post) => {
+      post.liked = !!post.likes.find((like) => like._id == req.user.id);
+      res.send({ post });
+    })
     .catch((err) => next(err));
 };
 
@@ -161,36 +182,18 @@ exports.like_post = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
     const post = await Post.findById(req.params.id);
+    const liked = !!post.likes.find((like) => like._id == req.user.id);
 
-    // error if user already liked post
-    if (post.likes.find((like) => like._id == req.user.id)) {
-      return next(new Error("post already liked"));
+    if (liked) {
+      // if already liked, remove users like from post
+      post.likes = post.likes.filter((like) => like._id != req.user.id);
+    } else {
+      // if not liked, add users like to post
+      post.likes.push(user);
     }
 
-    post.likes.push(user);
     await post.save();
-
-    res.send({ success: true, msg: "post liked" });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// Unlike post
-exports.unlike_post = async (req, res, next) => {
-  try {
-    const post = await Post.findById(req.params.id);
-
-    // error if user didnt already like post
-    if (!post.likes.find((like) => like._id == req.user.id)) {
-      return next(new Error("post not liked"));
-    }
-
-    post.likes = post.likes.filter((like) => like._id != req.user.id);
-
-    await post.save();
-
-    res.send({ success: true, msg: "post unliked" });
+    res.send({ success: true, msg: `post ${liked ? "unliked" : "liked"}` });
   } catch (err) {
     next(err);
   }

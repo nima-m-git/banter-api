@@ -20,11 +20,8 @@ router.delete("/:id", postController.delete_post);
 // POST comment on post
 router.post("/:id", postController.add_comment);
 
-// POST like post
-router.post("/:id/like", postController.like_post);
-
-// DELETE unlike post
-router.delete("/:id/like", postController.unlike_post);
+// PUT like post
+router.put("/:id/like", postController.like_post);
 
 // DELETE comment
 router.delete("/:id/:commentId", postController.delete_comment);
