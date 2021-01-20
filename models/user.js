@@ -69,7 +69,7 @@ UserSchema.virtual("imageurl").get(function () {
   return "/images/" + this.filename;
 });
 
-// UserSchema.set("toObject", { virtuals: true });
-// UserSchema.set("toJSON", { virtuals: true });
+UserSchema.set("toObject", { virtuals: true });
+UserSchema.set("toJSON", { virtuals: true });
 
 module.exports = mongoose.model("User", UserSchema);

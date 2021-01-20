@@ -22,7 +22,7 @@ exports.index = (req, res, next) => {
     .sort([["timeCreated", "descending"]])
     .populate({
       path: "author likes comments",
-      select: "firstName lastName",
+      select: "firstName lastName content",
       populate: {
         path: "author",
         select: "firstName lastName",
@@ -44,7 +44,7 @@ exports.get_post = (req, res, next) => {
   Post.findById(req.params.id)
     .populate({
       path: "author likes comments",
-      select: "firstName lastName",
+      select: "firstName lastName content",
       populate: {
         path: "author",
         select: "firstName lastName",
