@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
 
 const Schema = mongoose.Schema;
 
@@ -53,6 +54,7 @@ const UserSchema = new Schema(
   },
   {
     virtuals: true,
+    getters: true,
   }
 );
 
@@ -69,7 +71,9 @@ UserSchema.virtual("imageurl").get(function () {
   return "/images/" + this.filename;
 });
 
-UserSchema.set("toObject", { virtuals: true });
-UserSchema.set("toJSON", { virtuals: true });
+UserSchema.set("toObject", { virtuals: true, getters: true });
+UserSchema.set("toJSON", { virtuals: true, getters: true });
+
+UserSchema.plugin(mongooseLeanVirtuals);
 
 module.exports = mongoose.model("User", UserSchema);

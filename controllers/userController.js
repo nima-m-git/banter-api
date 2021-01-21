@@ -88,7 +88,11 @@ exports.logout = (req, res) => {
 // User index
 exports.user_index = async (req, res, next) => {
   try {
-    const users = await User.find().populate("friends").exec();
+    const users = await User.find()
+      .lean()
+      .populate("friends", "-password")
+      .lean({ virtuals: true })
+      .exec();
 
     // add friend status in res relative to current user
     users.forEach((user) => {
@@ -166,8 +170,7 @@ exports.send_request = async (req, res, next) => {
     } else {
       // users already connected
       res.send({
-        msg: `request to ${requestUser.fullName} could not be made`,
-        friendsStatus: connectedFriend.status,
+        msg: `request to ${requestUser.fullName} could not be made, status currently ${connectedFriend.status}`,
       });
     }
   } catch (err) {
