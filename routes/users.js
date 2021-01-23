@@ -18,6 +18,9 @@ router.post("/requests/:id", userController.send_request);
 // PUT respond friend request
 router.put("/requests/:id", userController.respond_request);
 
+// GET current user profile
+router.get("/me", userController.current_user);
+
 // GET user profile
 router.get("/:id", userController.user_profile);
 

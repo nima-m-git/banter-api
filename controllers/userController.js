@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 
 const User = require("../models/user");
-const { request } = require("express");
 
 // User sign up
 exports.signup = [
@@ -90,7 +89,8 @@ exports.user_index = async (req, res, next) => {
   try {
     const users = await User.find()
       .lean()
-      .populate("friends", "-password")
+      .populate("friends")
+      .select("-password")
       .lean({ virtuals: true })
       .exec();
 
@@ -107,11 +107,31 @@ exports.user_index = async (req, res, next) => {
   }
 };
 
+// Current user profile
+exports.current_user = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate("posts friends")
+      .select("-password")
+      .exec();
+
+    // add friend status in res relative to current user
+    user.friendsStatus = user.requests.find(
+      (person) => person?._id == req.user.id
+    )?.status;
+
+    res.send({ user });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // User profile
 exports.user_profile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id)
       .populate("posts friends")
+      .select("-password")
       .exec();
 
     // add friend status in res relative to current user

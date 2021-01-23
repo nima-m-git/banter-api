@@ -65,18 +65,25 @@ exports.create_post = [
     .isLength({ min: 1, max: 5000 })
     .escape(),
 
-  (req, res, next) => {
+  async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(500).json({ ...errors, ...req.body });
 
-    new Post({
-      ...req.body,
-      author: req.user.id,
-    })
-      .save()
-      .then((post) => res.send({ post, msg: "Post submitted" }))
-      .catch((err) => next(err));
+    try {
+      const post = new Post({
+        ...req.body,
+        author: req.user.id,
+      });
+      await post.save();
+      const user = await User.findById(req.user.id);
+      user.posts.push(post);
+      await user.save();
+
+      res.send({ post, msg: "Post submitted" });
+    } catch (err) {
+      return next(err);
+    }
   },
 ];
 
