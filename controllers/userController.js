@@ -132,6 +132,11 @@ exports.send_request = async (req, res, next) => {
     const requestUser = await User.findById(req.params.id).exec();
     const currentUser = await User.findById(req.user.id).exec();
 
+    if (requestUser._id.equals(currentUser._id)) {
+      console.log("sameID");
+      return res.status(406).send({ msg: "cannot send yourself a request" });
+    }
+
     const connectedFriend = requestUser.requests.find(
       (person) => person?._id == req.user.id
     );
@@ -169,7 +174,7 @@ exports.send_request = async (req, res, next) => {
       }
     } else {
       // users already connected
-      res.send({
+      return res.send({
         msg: `request to ${requestUser.fullName} could not be made, status currently ${connectedFriend.status}`,
       });
     }
