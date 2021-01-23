@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 
 const User = require("../models/user");
+const Comment = require("../models/comment");
 
 // User sign up
 exports.signup = [
@@ -111,7 +112,12 @@ exports.user_index = async (req, res, next) => {
 exports.current_user = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
-      .populate("posts friends")
+      .populate({
+        path: "posts",
+        populate: {
+          path: "comments",
+        },
+      })
       .select("-password")
       .exec();
 
@@ -130,7 +136,12 @@ exports.current_user = async (req, res, next) => {
 exports.user_profile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id)
-      .populate("posts friends")
+      .populate({
+        path: "posts friends",
+        populate: {
+          path: "comments",
+        },
+      })
       .select("-password")
       .exec();
 
