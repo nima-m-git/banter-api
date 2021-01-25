@@ -10,7 +10,6 @@ const Image = require("../models/image");
 
 const { upload } = require("../components/upload");
 const deleteImage = require("../components/deleteImageIfExists");
-const image = require("../models/image");
 
 // User sign up
 exports.signup = [
@@ -49,22 +48,7 @@ exports.signup = [
     }
 
     bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-      if (err) {
-        return next(err);
-      }
-
-      console.log(req.file);
-
-      // const user = req.file
-      //   ? new User({
-      //       ...req.body,
-      //       ...req.file,
-      //       password: hashedPassword,
-      //     })
-      //   : new User({
-      //       ...req.body,
-      //       password: hashedPassword,
-      //     });
+      if (err) return next(err);
 
       try {
         let image = null;
@@ -154,10 +138,8 @@ exports.logout = (req, res) => {
 exports.user_index = async (req, res, next) => {
   try {
     const users = await User.find()
-      .lean()
       .populate("friends image")
       .select("-password")
-      .lean({ virtuals: true })
       .exec();
 
     // add friend status in res relative to current user
@@ -209,8 +191,6 @@ exports.user_profile = async (req, res, next) => {
     user.friendsStatus = user.requests.find(
       (person) => person?._id == req.user.id
     )?.status;
-
-    console.log("sending user over" + user);
 
     res.send({ user });
   } catch (err) {
