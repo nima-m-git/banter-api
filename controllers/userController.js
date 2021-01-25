@@ -2,12 +2,22 @@ const passport = require("passport");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
+const fs = require("fs");
+const mongoose = require("mongoose");
 
 const User = require("../models/user");
-const Comment = require("../models/comment");
+const Image = require("../models/image");
+
+const { upload } = require("../components/upload");
+const deleteImage = require("../components/deleteImageIfExists");
+const image = require("../models/image");
 
 // User sign up
 exports.signup = [
+  // image upload
+  upload.single("image"),
+
+  // validate fields
   body("email", "Must be valid email")
     .isEmail()
     .escape()
@@ -30,6 +40,7 @@ exports.signup = [
   }),
   body("firstName", "Valid first name required").isAlpha().trim(),
   body("lastName").isAlpha().trim().withMessage("Valid last name required"),
+
   (req, res, next) => {
     const errors = validationResult(req);
 
@@ -37,24 +48,78 @@ exports.signup = [
       return res.status(500).json({ ...errors, ...req.body });
     }
 
-    bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
+    bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
       if (err) {
         return next(err);
       }
 
-      new User({
-        ...req.body,
-        password: hashedPassword,
-      })
-        .save()
-        .then((user) =>
-          res.status(200).send({
+      console.log(req.file);
+
+      // const user = req.file
+      //   ? new User({
+      //       ...req.body,
+      //       ...req.file,
+      //       password: hashedPassword,
+      //     })
+      //   : new User({
+      //       ...req.body,
+      //       password: hashedPassword,
+      //     });
+
+      try {
+        let image = null;
+        if (req?.file) {
+          image = new Image({
+            image: {
+              _id: mongoose.Types.ObjectId(),
+              data: fs.readFileSync(req.file.path),
+              contentType: req.file.mimetype,
+            },
+          });
+        }
+
+        await image.save();
+
+        const user = new User({
+          ...req.body,
+          password: hashedPassword,
+        });
+        if (image) {
+          user.image = image._id;
+        }
+
+        await user.save().then((user) =>
+          res.status(201).send({
             user,
             message: "succesful registration",
           })
-        )
-        .catch((err) => next(err));
+        );
+      } catch (err) {
+        return next(err);
+      }
     });
+  },
+];
+
+// User change image
+exports.change_image = [
+  // image upload
+  upload.single("image"),
+
+  async (req, res, next) => {
+    try {
+      // remove old image for delete, or new image in place
+      if (req.body["remove-image"] || req.file) {
+        await deleteImage.deleteImageIfExists(User.find(req.params.id));
+      }
+
+      await User.findByIdAndUpdate(req.user.id, {
+        filename: req.file ? req.file.filename : null,
+      });
+      res.send({ msg: "image updated" });
+    } catch (err) {
+      return next(err);
+    }
   },
 ];
 
@@ -90,7 +155,7 @@ exports.user_index = async (req, res, next) => {
   try {
     const users = await User.find()
       .lean()
-      .populate("friends")
+      .populate("friends image")
       .select("-password")
       .lean({ virtuals: true })
       .exec();
@@ -113,18 +178,13 @@ exports.current_user = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
       .populate({
-        path: "posts",
+        path: "posts image",
         populate: {
           path: "comments",
         },
       })
       .select("-password")
       .exec();
-
-    // add friend status in res relative to current user
-    user.friendsStatus = user.requests.find(
-      (person) => person?._id == req.user.id
-    )?.status;
 
     res.send({ user });
   } catch (err) {
@@ -137,7 +197,7 @@ exports.user_profile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id)
       .populate({
-        path: "posts friends",
+        path: "posts friends image",
         populate: {
           path: "comments",
         },
@@ -149,6 +209,8 @@ exports.user_profile = async (req, res, next) => {
     user.friendsStatus = user.requests.find(
       (person) => person?._id == req.user.id
     )?.status;
+
+    console.log("sending user over" + user);
 
     res.send({ user });
   } catch (err) {

@@ -45,11 +45,9 @@ const UserSchema = new Schema(
         ref: "Post",
       },
     ],
-    filename: {
-      type: String,
-    },
-    mimetype: {
-      type: String,
+    image: {
+      type: Schema.Types.ObjectId,
+      ref: "Image",
     },
   },
   {
@@ -59,16 +57,13 @@ const UserSchema = new Schema(
 );
 
 // Virtual for user url
-UserSchema.virtual("url").get(() => "/user/" + this._id);
+UserSchema.virtual("url").get(function () {
+  "/user/" + this._id;
+});
 
 // Virtual for user full name formatted
 UserSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`;
-});
-
-// Virtual for image's URL
-UserSchema.virtual("imageurl").get(function () {
-  return "/images/" + this.filename;
 });
 
 UserSchema.set("toObject", { virtuals: true, getters: true });
