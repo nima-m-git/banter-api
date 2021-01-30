@@ -24,4 +24,7 @@ router.get("/me", userController.current_user);
 // GET user profile
 router.get("/:id", userController.user_profile);
 
+// PUT change profile pic
+router.put("/update_image", userController.change_image);
+
 module.exports = router;

@@ -6,6 +6,7 @@ const ImageSchema = new Schema(
     image: {
       data: Buffer,
       contentType: String,
+      filename: String,
     },
     author: {
       type: Schema.Types.ObjectId,

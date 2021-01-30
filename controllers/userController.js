@@ -3,13 +3,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const fs = require("fs");
-const mongoose = require("mongoose");
 
 const User = require("../models/user");
 const Image = require("../models/image");
 
 const { upload } = require("../components/upload");
-const deleteImage = require("../components/deleteImageIfExists");
+const { deleteImage } = require("../components/deleteImageIfExists");
 
 // User sign up
 exports.signup = [
@@ -55,14 +54,16 @@ exports.signup = [
         if (req?.file) {
           image = new Image({
             image: {
-              _id: mongoose.Types.ObjectId(),
               data: fs.readFileSync(req.file.path),
               contentType: req.file.mimetype,
+              filename: req.file.filename,
             },
           });
-        }
 
-        await image.save();
+          await image.save();
+          // remove locally stored image after sent to db
+          await deleteImage(image.image.filename);
+        }
 
         const user = new User({
           ...req.body,
@@ -70,6 +71,7 @@ exports.signup = [
         });
         if (image) {
           user.image = image._id;
+          image.author = user._id;
         }
 
         await user.save().then((user) =>
@@ -92,14 +94,35 @@ exports.change_image = [
 
   async (req, res, next) => {
     try {
-      // remove old image for delete, or new image in place
-      if (req.body["remove-image"] || req.file) {
-        await deleteImage.deleteImageIfExists(User.find(req.params.id));
+      const user = await User.findById(req.user.id).populate("image");
+      // remove old image for delete, or replace
+      if (req.body["remove-image"] || user.image) {
+        // remove image from database
+        Image.findByIdAndDelete(user.image._id);
+
+        user.image = undefined;
+        await user.save();
+
+        // if image only deleted , end middleware here
+        if (req.body["remove-image"]) return res.send({ msg: "image removed" });
       }
 
-      await User.findByIdAndUpdate(req.user.id, {
-        filename: req.file ? req.file.filename : null,
+      const image = new Image({
+        image: {
+          data: fs.readFileSync(req.file.path),
+          contentType: req.file.mimetype,
+          filename: req.file.filename,
+        },
+        author: user._id,
       });
+      await image.save();
+      // remove locally stored image after saved to db
+      await deleteImage(image.image.filename);
+
+      // update image reference
+      user.image = image._id;
+      await user.save();
+
       res.send({ msg: "image updated" });
     } catch (err) {
       return next(err);
