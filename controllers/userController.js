@@ -187,7 +187,7 @@ exports.current_user = async (req, res, next) => {
       .populate({
         path: "posts image",
         populate: {
-          path: "comments",
+          path: "comments likes",
         },
       })
       .select("-password")
@@ -207,7 +207,7 @@ exports.user_profile = async (req, res, next) => {
       .populate({
         path: "posts friends image",
         populate: {
-          path: "comments",
+          path: "comments likes",
         },
       })
       .select("-password")
