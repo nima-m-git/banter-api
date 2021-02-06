@@ -187,7 +187,7 @@ exports.current_user = async (req, res, next) => {
       .populate({
         path: "posts image",
         populate: {
-          path: "comments likes",
+          path: "comments likes author",
         },
       })
       .select("-password")
@@ -212,11 +212,17 @@ exports.user_profile = async (req, res, next) => {
       .populate({
         path: "posts friends image",
         populate: {
-          path: "comments likes",
+          path: "comments likes author",
+          select: "-password",
+          populate: {
+            path: "author",
+            select: "-password",
+          },
         },
       })
-      .select("-password")
       .exec();
+
+    console.log(user.posts[0].comments[0]);
 
     // add friend status in res relative to current user
     user.friendsStatus = user.requests.find(

@@ -25,7 +25,8 @@ exports.index = (req, res, next) => {
       path: "author likes comments",
       select: "firstName lastName content image",
       populate: {
-        path: "image",
+        path: "image author",
+        select: "-password",
       },
     })
     .exec()
@@ -47,7 +48,8 @@ exports.get_post = (req, res, next) => {
       path: "author likes comments",
       select: "firstName lastName content image",
       populate: {
-        path: "image",
+        path: "image author",
+        select: "-password",
       },
     })
     .exec()
