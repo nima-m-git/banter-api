@@ -193,6 +193,11 @@ exports.current_user = async (req, res, next) => {
       .select("-password")
       .exec();
 
+    user.posts.forEach(
+      (post) =>
+        (post.liked = !!post.likes.find((like) => like._id == req.user.id))
+    );
+
     res.json({ user });
   } catch (err) {
     return next(err);
@@ -217,6 +222,11 @@ exports.user_profile = async (req, res, next) => {
     user.friendsStatus = user.requests.find(
       (person) => person?._id == req.user.id
     )?.status;
+
+    user.posts.forEach(
+      (post) =>
+        (post.liked = !!post.likes.find((like) => like._id == req.user.id))
+    );
 
     res.json({ user });
   } catch (err) {

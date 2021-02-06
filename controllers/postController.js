@@ -19,6 +19,7 @@ const { body, validationResult } = require("express-validator");
 // Get all posts
 exports.index = (req, res, next) => {
   Post.find()
+    .lean({ virtuals: true })
     .sort([["timeCreated", "descending"]])
     .populate({
       path: "author likes comments",
@@ -33,7 +34,6 @@ exports.index = (req, res, next) => {
         (post) =>
           (post.liked = !!post.likes.find((like) => like._id == req.user.id))
       );
-      console.log(posts);
       res.send({ posts });
     })
     .catch((err) => next(err));
@@ -42,6 +42,7 @@ exports.index = (req, res, next) => {
 // Get post details
 exports.get_post = (req, res, next) => {
   Post.findById(req.params.id)
+    .lean({ virtuals: true })
     .populate({
       path: "author likes comments",
       select: "firstName lastName content image",
@@ -186,7 +187,6 @@ exports.delete_comment = async (req, res, next) => {
 // Like post
 exports.like_post = async (req, res, next) => {
   try {
-    console.log("liking");
     const user = await User.findById(req.user.id);
     const post = await Post.findById(req.params.id);
     const liked = !!post.likes.find((like) => like._id == req.user.id);
