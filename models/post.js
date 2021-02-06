@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
 const Schema = mongoose.Schema;
 
 const PostSchema = new Schema({
@@ -34,5 +35,10 @@ const PostSchema = new Schema({
 PostSchema.virtual("url").get(function () {
   return "/post/" + this._id;
 });
+
+PostSchema.set("toObject", { virtuals: true, getters: true });
+PostSchema.set("toJSON", { virtuals: true, getters: true });
+
+PostSchema.plugin(mongooseLeanVirtuals);
 
 module.exports = mongoose.model("Post", PostSchema);

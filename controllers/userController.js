@@ -161,6 +161,7 @@ exports.logout = (req, res) => {
 exports.user_index = async (req, res, next) => {
   try {
     const users = await User.find()
+      .lean({ virtuals: true })
       .populate("friends image")
       .select("-password")
       .exec();
@@ -172,7 +173,7 @@ exports.user_index = async (req, res, next) => {
       )?.status;
     });
 
-    res.send({ users });
+    res.json({ users });
   } catch (err) {
     return next(err);
   }
@@ -182,6 +183,7 @@ exports.user_index = async (req, res, next) => {
 exports.current_user = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
+      .lean({ virtuals: true })
       .populate({
         path: "posts image",
         populate: {
@@ -191,7 +193,7 @@ exports.current_user = async (req, res, next) => {
       .select("-password")
       .exec();
 
-    res.send({ user });
+    res.json({ user });
   } catch (err) {
     return next(err);
   }
@@ -201,6 +203,7 @@ exports.current_user = async (req, res, next) => {
 exports.user_profile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id)
+      .lean({ virtuals: true })
       .populate({
         path: "posts friends image",
         populate: {
@@ -215,7 +218,7 @@ exports.user_profile = async (req, res, next) => {
       (person) => person?._id == req.user.id
     )?.status;
 
-    res.send({ user });
+    res.json({ user });
   } catch (err) {
     return next(err);
   }
