@@ -16,16 +16,16 @@ exports.signup = [
   upload.single("image"),
 
   // validate fields
-  body("email", "Must be valid email")
-    .isEmail()
-    .escape()
-    .custom(async (value, { req }) => {
-      const emails = (await User.find({}, "email")).map((obj) => obj.email);
-      if (emails.includes(value)) {
-        throw new Error("Email already registered");
-      }
-      return true;
-    }),
+  // body("email", "Must be valid email")
+  //   .isEmail()
+  //   .escape()
+  //   .custom(async (value, { req }) => {
+  //     const emails = (await User.find({}, "email")).map((obj) => obj.email);
+  //     if (emails.includes(value)) {
+  //       throw new Error("Email already registered");
+  //     }
+  //     return true;
+  //   }),
   body("password")
     .isLength({ min: 5 })
     .withMessage("Password must be at least 5 characters long")
@@ -36,8 +36,12 @@ exports.signup = [
     }
     return true;
   }),
-  body("firstName", "Valid first name required").isAlpha().trim(),
-  body("lastName").isAlpha().trim().withMessage("Valid last name required"),
+  // body("firstName", "Valid first name required").isAlpha().trim(),
+  // body("lastName").isAlpha().trim().withMessage("Valid last name required"),
+  body("username")
+    .isAlphanumeric()
+    .trim()
+    .withMessage("Valid username required, letters and numbers only"),
 
   (req, res, next) => {
     const errors = validationResult(req);
