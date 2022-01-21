@@ -13,6 +13,6 @@ router.post("/login", userController.login);
 router.get("/logout", userController.logout);
 
 // GET test
-router.get("/", (req, res) => res.send(`Hello ${req.user || "world"}!`));
+router.get("/", (req, res) => res.send(`Hello ${req.user || "Banter"}!`));
 
 module.exports = router;

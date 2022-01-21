@@ -5,25 +5,30 @@ const Schema = mongoose.Schema;
 
 const UserSchema = new Schema(
   {
-    email: {
+    // email: {
+    //   type: String,
+    //   required: true,
+    //   maxlength: 50,
+    // },
+    username: {
       type: String,
       required: true,
-      maxlength: 50,
+      maxlength: 30,
     },
     password: {
       type: String,
       minlength: 5,
     },
-    firstName: {
-      type: String,
-      minlength: 2,
-      required: true,
-    },
-    lastName: {
-      type: String,
-      minlength: 2,
-      required: true,
-    },
+    // firstName: {
+    //   type: String,
+    //   minlength: 2,
+    //   required: true,
+    // },
+    // lastName: {
+    //   type: String,
+    //   minlength: 2,
+    //   required: true,
+    // },
     friends: [
       {
         type: Schema.Types.ObjectId,
