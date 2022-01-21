@@ -16,14 +16,14 @@ passport.deserializeUser((user, done) => done(null, user));
 passport.use(
   new LocalStrategy(
     {
-      usernameField: "email",
+      usernameField: "username",
       passwordField: "password",
     },
-    (email, password, done) => {
-      User.findOne({ email })
+    (username, password, done) => {
+      User.findOne({ username })
         .then((user) => {
           if (!user) {
-            return done(null, false, { message: "Invalid email" });
+            return done(null, false, { message: "Invalid username" });
           }
 
           bcrypt.compare(password, user.password, (err, res) => {
