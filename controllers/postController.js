@@ -27,7 +27,7 @@ exports.index = (req, res, next) => {
     })
     .populate({
       path: "comments",
-      select: "author",
+      select: "author content",
       populate: {
         path: "author",
         select: "username",
