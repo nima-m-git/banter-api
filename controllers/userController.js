@@ -39,7 +39,8 @@ exports.signup = [
   // body("firstName", "Valid first name required").isAlpha().trim(),
   // body("lastName").isAlpha().trim().withMessage("Valid last name required"),
   body("username")
-    .isAlphanumeric()
+    .notEmpty()
+    // .isAlphanumeric()
     .trim()
     .withMessage("Valid username required, letters and numbers only"),
 
