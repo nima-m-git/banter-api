@@ -288,14 +288,14 @@ exports.send_request = async (req, res, next) => {
         });
         await currentUser.save();
 
-        res.send({ msg: `request to ${requestUser.fullName} sent` });
+        res.send({ msg: `request to ${requestUser.username} sent` });
       } catch (err) {
         return next(err);
       }
     } else {
       // users already connected
       return res.send({
-        msg: `request to ${requestUser.fullName} could not be made, status currently ${connectedFriend.status}`,
+        msg: `request to ${requestUser.username} could not be made, status currently ${connectedFriend.status}`,
       });
     }
   } catch (err) {

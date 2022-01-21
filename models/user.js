@@ -67,9 +67,9 @@ UserSchema.virtual("url").get(function () {
 });
 
 // Virtual for user full name formatted
-UserSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
+// UserSchema.virtual("fullName").get(function () {
+//   return `${this.firstName} ${this.lastName}`;
+// });
 
 UserSchema.set("toObject", { virtuals: true, getters: true });
 UserSchema.set("toJSON", { virtuals: true, getters: true });

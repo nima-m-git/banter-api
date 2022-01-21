@@ -86,4 +86,8 @@ app.use(function (err, req, res, next) {
   return res.json({ err: err.toString() });
 });
 
+// app.listen(3000, () => {
+//   console.log(`Example app listening on port 3000`);
+// });
+
 module.exports = app;

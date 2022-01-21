@@ -23,10 +23,14 @@ exports.index = (req, res, next) => {
     .sort([["timeCreated", "descending"]])
     .populate({
       path: "author likes comments",
-      select: "firstName lastName content image",
+      select: "username content image author",
+    })
+    .populate({
+      path: "comments",
+      select: "author",
       populate: {
-        path: "image author",
-        select: "-password",
+        path: "author",
+        select: "username",
       },
     })
     .exec()
